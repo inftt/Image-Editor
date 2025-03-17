@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inftt decal bypasser</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #uploadButton, .btn, #downloadButton {
+            padding: 12px 24px;
+            background: #66ccff;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px;
+            display: inline-block;
+        }
+        #uploadButton:hover, .btn:hover, #downloadButton:hover {
+            transform: scale(1.15);
+            box-shadow: 0px 0px 15px #66ccff;
+        }
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+            width: 300px;
+            height: 300px;
+            background-color: transparent;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .grayscale {
+            filter: grayscale(100%);
+        }
+        #downloadButton {
+            display: none;
+            margin-top: 20px;
+            position: relative;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="loadImage(event)">
+    <button id="uploadButton" onclick="document.getElementById('fileInput').click()">Upload Image</button>
+    <br>
+    <div>
+        <button class="btn" onclick="applyMethod(1)">Method 1</button>
+        <button class="btn" onclick="applyMethod(2)">Method 2</button>
+        <button class="btn" onclick="applyMethod(3)">Method 3</button>
+    </div>
+    <div id="imageContainer" class="image-container" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)"></div>
+    <div class="button-container">
+        <button id="downloadButton" onclick="downloadImage()">Download Image</button>
+    </div>
+    
+    <script>
+        let uploadedImage = null;
+        let currentOverlay = null;
+        let isGrayscale = false;
+        
+        function loadImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                uploadedImage = reader.result;
+                currentOverlay = null;
+                isGrayscale = false;
+                displayImage();
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+        
+        function displayImage() {
+            const container = document.getElementById("imageContainer");
+            container.innerHTML = "";
+            const img = document.createElement("img");
+            img.src = uploadedImage;
+            img.width = 300;
+            img.height = 300;
+            img.style.filter = isGrayscale ? "grayscale(100%)" : "none";
+            container.appendChild(img);
+        }
+        
+        function applyMethod(method) {
+            if (!uploadedImage) {
+                alert("upload an image first you silly ahh");
+                return;
+            }
+            isGrayscale = method === 3;
+            displayImage();
+            const container = document.getElementById("imageContainer");
+            const overlay = document.createElement("img");
+            overlay.className = "overlay";
+            overlay.width = 300;
+            overlay.height = 300;
+            if (method === 1) overlay.src = "https://i.postimg.cc/wBzkhHpB/Untitled.png";
+            if (method === 2) overlay.src = "https://i.postimg.cc/DZpGS36m/Untitled-2wad.png";
+            if (method === 3) overlay.src = "https://i.postimg.cc/fb279dTw/Untitled-4.png";
+            container.appendChild(overlay);
+            currentOverlay = overlay.src;
+            document.getElementById("downloadButton").style.display = "block";
+        }
+        
+        function downloadImage() {
+            if (!uploadedImage) return;
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 300;
+            canvas.height = 300;
+            const baseImage = new Image();
+            baseImage.src = uploadedImage;
+            baseImage.onload = function() {
+                if (isGrayscale) {
+                    ctx.filter = "grayscale(100%)";
+                } else {
+                    ctx.filter = "none";
+                }
+                ctx.drawImage(baseImage, 0, 0, 300, 300);
+                ctx.filter = "none"; 
+                if (currentOverlay) {
+                    const overlayImage = new Image();
+                    overlayImage.crossOrigin = "anonymous";
+                    overlayImage.src = currentOverlay;
+                    overlayImage.onload = function() {
+                        ctx.drawImage(overlayImage, 0, 0, 300, 300);
+                        saveCanvas(canvas);
+                    };
+                } else {
+                    saveCanvas(canvas);
+                }
+            };
+        }
+        
+        function saveCanvas(canvas) {
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = "edited_image.png";
+            link.click();
+        }
+        
+        function dropHandler(event) {
+            event.preventDefault();
+            if (event.dataTransfer.items) {
+                for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                    if (event.dataTransfer.items[i].kind === 'file') {
+                        const file = event.dataTransfer.items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function() {
+                            uploadedImage = reader.result;
+                            displayImage();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            }
+        }
+        function dragOverHandler(event) {
+            event.preventDefault();
+        }
+    </script>
+</body>
+</html>
